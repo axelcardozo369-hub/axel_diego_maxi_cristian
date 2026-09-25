@@ -1,0 +1,9 @@
+fecha;socio;monto;estado
+01/09/2026;Ana Benítez;1.500;paga
+01/09/2026;Luis Ortiz;1.500;debe
+03/09/2026;Marta Leiva;1.500;paga
+05/09/2026;Pedro Ríos;;debe
+08/09/2026;Carla Duarte;2.000;paga
+10/09/2026;Jorge Vera;1.500;paga
+12/09/2026;Sofía Acuña;1.500;debe
+15/09/2026;Raúl Giménez;2.000;paga

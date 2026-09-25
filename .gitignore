@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Archivos subidos por los usuarios
+backend/uploads/
+
+# Build del frontend
+frontend/dist/
+
+# Variables de entorno (datos sensibles)
+.env
+
+# Logs y sistema
+*.log
+.DS_Store
+Thumbs.db
+.vscode/

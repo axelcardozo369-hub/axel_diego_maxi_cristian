@@ -1,0 +1,12 @@
+{
+  "comercio": "Almacén Don Martín",
+  "semana": 38,
+  "ventas": [
+    { "fecha": "2026-09-14", "producto": "Yerba 1kg", "cantidad": 12, "total": 54000, "medio_pago": "efectivo" },
+    { "fecha": "2026-09-14", "producto": "Azúcar 1kg", "cantidad": 8, "total": 9600, "medio_pago": "transferencia" },
+    { "fecha": "2026-09-15", "producto": "Yerba 1kg", "cantidad": 6, "total": 27000, "medio_pago": "transferencia" },
+    { "fecha": "2026-09-16", "producto": "Aceite 900ml", "cantidad": 5, "total": 11500, "medio_pago": "efectivo" },
+    { "fecha": "2026-09-17", "producto": "Yerba 1kg", "cantidad": 9, "total": 40500, "medio_pago": "efectivo" },
+    { "fecha": "2026-09-18", "producto": "Harina 1kg", "cantidad": 10, "total": 9000, "medio_pago": null }
+  ]
+}
