@@ -8,6 +8,7 @@ import EmptyState from '../components/EmptyState.jsx';
 import Modal from '../components/Modal.jsx';
 import ReporteView from '../components/ReporteView.jsx';
 import ReportModal from '../components/ReportModal.jsx';
+import MultiReportModal from '../components/MultiReportModal.jsx';
 import { ESTADOS, fecha, haceDias, puedeEditar } from '../utils/formato.js';
 
 const FILTROS = [['', 'Todos'], ['publicado', 'Publicados'], ['borrador', 'Borradores'], ['archivado', 'Archivados']];
@@ -24,6 +25,20 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [modal, setModal] = useState({ abierto: false, reporte: null, fuente: '' });
   const [detalle, setDetalle] = useState(null);
+  const [multiple, setMultiple] = useState(false);
+  const [descargando, setDescargando] = useState(null);
+
+  const descargarPdf = async (r) => {
+    setDescargando(r.id);
+    try {
+      const nombre = `${(r.titulo || 'reporte').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').slice(0, 60)}.pdf`;
+      await reportsApi.descargarPdf(r.id, nombre);
+    } catch (e) {
+      notificar(e.message, 'error');
+    } finally {
+      setDescargando(null);
+    }
+  };
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -72,7 +87,12 @@ export default function Dashboard() {
             {sinReporte.length > 0 && <> {sinReporte.length === 1 ? 'Una fuente todavía no se convirtió' : `${sinReporte.length} fuentes todavía no se convirtieron`} en información útil.</>}
           </p>
         </div>
-        {editable && <button type="button" className="btn btn-primario" onClick={() => abrirNuevo()}><i className="bi bi-plus-lg me-1" />Nuevo reporte</button>}
+        {editable && (
+          <div className="d-flex gap-2 flex-wrap">
+            <button type="button" className="btn btn-secundario" onClick={() => setMultiple(true)}><i className="bi bi-union me-1" />Varias fuentes</button>
+            <button type="button" className="btn btn-primario" onClick={() => abrirNuevo()}><i className="bi bi-plus-lg me-1" />Nuevo reporte</button>
+          </div>
+        )}
       </header>
 
       {ia && !ia.configurada && (
@@ -145,7 +165,9 @@ export default function Dashboard() {
                 <div className="d-flex justify-content-between align-items-start gap-2">
                   <div>
                     <h3 className="h6 mb-1">{r.titulo || r.fuente?.titulo}</h3>
-                    <p className="small mb-0 text-secundario">{r.fuente?.titulo} · <span className="mono">{r.fuente?.identificador}</span></p>
+                    {r.fuentes?.length > 1
+                      ? <p className="small mb-0 text-secundario"><i className="bi bi-union me-1" />{r.fuentes.length} fuentes: {r.fuentes.map((f) => f.titulo).join(', ')}</p>
+                      : <p className="small mb-0 text-secundario">{r.fuente?.titulo} · <span className="mono">{r.fuente?.identificador}</span></p>}
                   </div>
                   <span className={`estado-badge ${ESTADOS[r.estado].clase}`}>{ESTADOS[r.estado].texto}</span>
                 </div>
@@ -163,6 +185,9 @@ export default function Dashboard() {
                 </p>
                 <div className="acciones">
                   <button type="button" className="btn btn-sm btn-link" onClick={() => setDetalle(r)}>Ver reporte</button>
+                  <button type="button" className="btn btn-sm btn-link" onClick={() => descargarPdf(r)} disabled={descargando === r.id}>
+                    {descargando === r.id ? <span className="spinner-border spinner-border-sm" /> : <><i className="bi bi-file-earmark-pdf me-1" />PDF</>}
+                  </button>
                   {editable && <button type="button" className="btn btn-sm btn-link" onClick={() => setModal({ abierto: true, reporte: r, fuente: '' })}>Editar</button>}
                   {editable && <button type="button" className="btn btn-sm btn-link texto-peligro" onClick={() => eliminar(r)}>Eliminar</button>}
                 </div>
@@ -171,6 +196,8 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      <MultiReportModal show={multiple} onClose={() => setMultiple(false)} onSaved={() => { setMultiple(false); cargar(); }} />
 
       <ReportModal show={modal.abierto} reporte={modal.reporte} fuenteInicial={modal.fuente}
         onClose={() => setModal({ abierto: false, reporte: null, fuente: '' })} onSaved={alGuardar} />
@@ -181,10 +208,16 @@ export default function Dashboard() {
             {detalle.consulta && <p className="consulta"><i className="bi bi-chat-square-text me-2" />{detalle.consulta}</p>}
             <p className="resumen-completo">{detalle.resumen_ejecutivo}</p>
             <ReporteView metricas={detalle.metricas_clave} />
-            <p className="small text-secundario mt-3 mb-0">
-              Fuente: {detalle.fuente?.titulo} ({detalle.fuente?.identificador}) · {detalle.autor?.nombre} · {fecha(detalle.updatedAt)}
-              {detalle.modelo_ia && <> · Generado con {detalle.modelo_ia}</>}
-            </p>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+              <p className="small text-secundario mb-0">
+                {detalle.fuentes?.length > 1 ? `Fuentes: ${detalle.fuentes.map((f) => f.titulo).join(', ')}` : `Fuente: ${detalle.fuente?.titulo} (${detalle.fuente?.identificador})`}
+                {' '}· {detalle.autor?.nombre} · {fecha(detalle.updatedAt)}
+                {detalle.modelo_ia && <> · Generado con {detalle.modelo_ia}</>}
+              </p>
+              <button type="button" className="btn btn-primario btn-sm" onClick={() => descargarPdf(detalle)} disabled={descargando === detalle.id}>
+                {descargando === detalle.id ? <span className="spinner-border spinner-border-sm me-1" /> : <i className="bi bi-file-earmark-pdf me-1" />}Descargar PDF
+              </button>
+            </div>
           </>
         )}
       </Modal>

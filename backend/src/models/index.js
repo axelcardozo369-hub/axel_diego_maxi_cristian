@@ -5,6 +5,7 @@ import { Category } from './Category.js';
 import { DataSource } from './DataSource.js';
 import { DataSourceCategory } from './DataSourceCategory.js';
 import { Report } from './Report.js';
+import { ReportSource } from './ReportSource.js';
 
 // ============================================================
 // ASOCIACIONES CENTRALIZADAS
@@ -58,4 +59,18 @@ Category.belongsToMany(DataSource, {
   as: 'fuentes',
 });
 
-export { sequelize, User, Profile, Category, DataSource, DataSourceCategory, Report };
+// ---------- N:M  Report ── DataSource (reportes de varias fuentes) ----------
+Report.belongsToMany(DataSource, {
+  through: ReportSource,
+  foreignKey: 'report_id',
+  otherKey: 'data_source_id',
+  as: 'fuentes',
+});
+DataSource.belongsToMany(Report, {
+  through: ReportSource,
+  foreignKey: 'data_source_id',
+  otherKey: 'report_id',
+  as: 'reportes_multiples',
+});
+
+export { sequelize, User, Profile, Category, DataSource, DataSourceCategory, Report, ReportSource };

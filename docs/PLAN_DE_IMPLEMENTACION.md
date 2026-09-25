@@ -380,3 +380,28 @@ Ver el detalle en [`COMO_FUNCIONA_LA_IA.md`](COMO_FUNCIONA_LA_IA.md). Resumen de
 - **Motor local que entiende la pregunta:** filtra filas o fragmentos por los términos de la consulta y calcula cifras exactas sobre ellos.
 - **Transparencia:** cada fuente muestra quién la procesó (Análisis local, Gemini u OpenRouter), cada reporte dice qué motor respondió, y la página "Cómo funciona la IA" muestra el uso y los errores en vivo.
 - **Bug corregido:** `sequelize.sync({ force: true })` en `server.js` borraba la base de datos en cada inicio.
+
+
+---
+
+# Versión 2.2 — Varias fuentes, comparación, consolidación y PDF
+
+Todo se **agregó** sin cambiar cómo funcionaba lo anterior: los reportes de una fuente, la carga de un solo archivo y la IA siguen igual.
+
+| Funcionalidad | Cómo se resolvió |
+|---|---|
+| Carga de varios archivos | El frontend acepta `multiple` y sube cada archivo con el endpoint de siempre (`POST /api/data-sources`), de a uno, con progreso y error por archivo. Con un solo archivo el formulario es idéntico al anterior. |
+| Reportes de varias fuentes | Nueva tabla pivote `report_sources` (N:M Report ↔ DataSource, modelo `ReportSource`, alias `fuentes`). `data_source_id` sigue siendo la fuente principal, así no cambia ninguna regla existente. Sequelize crea la tabla nueva sola: **no hace falta migrar**. |
+| Comparar | `utils/multifuente.js → compararFuentes`: normaliza valores (números, mayúsculas, espacios), resta multiconjuntos de filas, detecta la columna clave (`id`, `codigo`...) aunque haya duplicados, y distingue cambios de formato de cambios de valor. |
+| Consolidar / arqueo | `consolidarFuentes`: une las tablas, mapea sinónimos de columnas (`importe` → `monto`, `local` → `sucursal`...), agrupa y clasifica cada movimiento en ingreso o egreso según la columna `tipo` o el signo del monto. |
+| IA | Reutiliza la cadena existente (`ejecutarConIA('generarReporte')`): recibe los cálculos exactos como "CÁLCULOS VERIFICADOS" y una muestra chica de cada fuente. Las tablas exactas del motor se agregan siempre al reporte (`tablas_extra`). |
+| PDF | `services/pdf.service.js` con **pdfkit**, sin navegador ni servicios externos: encabezado, tarjetas de indicadores, listas, tablas con ancho proporcional, números alineados a la derecha, encabezado repetido al cortar página y pie numerado. |
+| Borrado seguro | Una fuente que se usa en un reporte de varias fuentes tampoco se puede borrar (409). |
+
+## Endpoints nuevos
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/reports/generar-multiple` | `{ data_source_ids: [2..10], modo: "comparacion" \| "consolidacion" \| "consulta", consulta? }` → borrador |
+| POST | `/api/reports` | Igual que antes, más `data_source_ids` opcional para guardar un reporte de varias fuentes |
+| GET | `/api/reports/:id/pdf` | Descarga cualquier reporte en PDF |

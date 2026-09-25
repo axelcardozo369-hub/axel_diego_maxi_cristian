@@ -1,4 +1,5 @@
 import { body, query } from 'express-validator';
+import { Op } from 'sequelize';
 import { DataSource } from '../models/index.js';
 import { ESTADOS_REPORTE, ORIGENES_REPORTE } from '../models/Report.js';
 
@@ -45,6 +46,7 @@ export const crearReportRules = [
   body('modelo_ia').optional({ values: 'null' }).isString().isLength({ max: 80 }),
   reglaFuente(),
 ];
+// (data_source_ids se agrega en las rutas: ver crearReportConFuentesRules)
 
 export const actualizarReportRules = [
   body('titulo').optional().trim().isLength({ max: 200 }).withMessage('El título no puede superar los 200 caracteres'),
@@ -61,3 +63,50 @@ export const filtrarReportsRules = [
   query('estado').optional().isIn(ESTADOS_REPORTE).withMessage('Estado inválido'),
   query('data_source_id').optional().isInt({ min: 1 }).withMessage('data_source_id inválido').toInt(),
 ];
+
+// ---------- Reportes sobre VARIAS fuentes ----------
+const fuentesValidas = async (ids) => {
+  const unicos = [...new Set(ids)];
+  if (unicos.length !== ids.length) throw new Error('Hay fuentes repetidas');
+  const encontradas = await DataSource.count({ where: { id: { [Op.in]: unicos } } });
+  if (encontradas !== unicos.length) throw new Error('Alguna de las fuentes no existe');
+  return true;
+};
+
+const reglaVariasFuentes = (campo = 'data_source_ids', opcional = false) => {
+  const cadena = body(campo);
+  return [
+    (opcional ? cadena.optional() : cadena)
+      .isArray({ min: 2, max: 10 }).withMessage('Elegí entre 2 y 10 fuentes')
+      .bail()
+      .custom((ids) => ids.every((id) => Number.isInteger(Number(id)) && Number(id) > 0)).withMessage('Cada fuente debe ser un id numérico')
+      .bail()
+      .customSanitizer((ids) => ids.map(Number))
+      .custom(fuentesValidas),
+  ];
+};
+
+export const generarMultipleRules = [
+  ...reglaVariasFuentes(),
+  body('modo')
+    .notEmpty().withMessage('Elegí qué querés hacer: comparar, consolidar o consultar')
+    .bail()
+    .isIn(['comparacion', 'consolidacion', 'consulta']).withMessage('El modo debe ser comparacion, consolidacion o consulta')
+    .bail()
+    .custom((modo, { req }) => {
+      if (modo === 'comparacion' && req.body.data_source_ids?.length !== 2) throw new Error('Para comparar elegí exactamente 2 fuentes');
+      return true;
+    }),
+  body('consulta')
+    .optional({ values: 'falsy' })
+    .trim()
+    .isLength({ min: 5, max: 1000 }).withMessage('La consulta debe tener entre 5 y 1000 caracteres'),
+  // En la consulta libre la pregunta es obligatoria; en comparar/consolidar es opcional
+  body('consulta').custom((consulta, { req }) => {
+    if (req.body.modo === 'consulta' && !String(consulta ?? '').trim()) throw new Error('Escribí qué querés saber');
+    return true;
+  }),
+];
+
+// Al guardar: data_source_ids es opcional (solo en reportes de varias fuentes)
+export const variasFuentesOpcional = reglaVariasFuentes('data_source_ids', true);

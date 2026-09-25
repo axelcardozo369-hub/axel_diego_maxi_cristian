@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { matchedData } from 'express-validator';
 import { Op } from 'sequelize';
-import { sequelize, DataSource, Category, DataSourceCategory, User, Report } from '../models/index.js';
+import { sequelize, DataSource, Category, DataSourceCategory, User, Report, ReportSource } from '../models/index.js';
 import { analizarContenido, generarResumen } from '../utils/analizador.js';
 import { detectarTipo, detectarTipoDeTexto } from '../utils/tiposArchivo.js';
 import { nombreOriginal } from '../middlewares/upload.middleware.js';
@@ -147,7 +147,11 @@ export const deleteDataSource = async (req, res) => {
     const fuente = await DataSource.findByPk(id);
     if (!fuente) return res.status(404).json({ message: 'Fuente de datos no encontrada' });
 
-    const reportesActivos = await Report.count({ where: { data_source_id: id } });
+    // Reportes que la usan como fuente principal o dentro de un reporte de varias fuentes
+    const vinculos = await ReportSource.findAll({ where: { data_source_id: id }, attributes: ['report_id'] });
+    const reportesActivos = await Report.count({
+      where: { [Op.or]: [{ data_source_id: id }, { id: { [Op.in]: vinculos.map((v) => v.report_id) } }] },
+    });
     if (reportesActivos > 0) {
       return res.status(409).json({
         message: `No se puede eliminar: tiene ${reportesActivos} reporte(s) activo(s). Eliminalos primero.`,

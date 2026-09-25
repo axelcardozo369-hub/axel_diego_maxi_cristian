@@ -1,0 +1,8 @@
+[
+  { "id": 1, "fecha": "2026-09-01", "cliente": "Ana Benítez", "producto": "Yerba 1kg", "total": 4500, "medio_pago": "efectivo" },
+  { "id": 2, "fecha": "2026-09-01", "cliente": "Luis Ortiz", "producto": "Azúcar 1kg", "total": 1200, "medio_pago": "transferencia" },
+  { "id": 3, "fecha": "2026-09-02", "cliente": "Marta Leiva", "producto": "Aceite 900ml", "total": 2300, "medio_pago": "efectivo" },
+  { "id": 4, "fecha": "2026-09-03", "cliente": "Pedro Ríos", "producto": "Yerba 1kg", "total": 4500, "medio_pago": "sin dato" },
+  { "id": 5, "fecha": "2026-09-03", "cliente": "Carla Duarte", "producto": "Harina 1kg", "total": 900, "medio_pago": "efectivo" },
+  { "id": 6, "fecha": "2026-09-04", "cliente": "Jorge Vera", "producto": "Yerba 1kg", "total": 4500, "medio_pago": "tarjeta" }
+]

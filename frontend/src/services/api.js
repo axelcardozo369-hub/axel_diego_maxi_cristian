@@ -145,6 +145,9 @@ export const dataSourcesApi = {
 export const reportsApi = {
   listar: (filtros) => request(`/reports${queryString(filtros)}`),
   generar: (datos) => request('/reports/generar', { method: 'POST', body: datos }),
+  // { data_source_ids: [..], modo: 'comparacion' | 'consolidacion' | 'consulta', consulta }
+  generarMultiple: (datos) => request('/reports/generar-multiple', { method: 'POST', body: datos }),
+  descargarPdf: (id, nombre) => descargar(`/reports/${id}/pdf`, nombre),
   crear: (datos) => request('/reports', { method: 'POST', body: datos }),
   actualizar: (id, datos) => request(`/reports/${id}`, { method: 'PUT', body: datos }),
   eliminar: (id) => request(`/reports/${id}`, { method: 'DELETE' }),

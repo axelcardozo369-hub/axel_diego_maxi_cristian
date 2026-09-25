@@ -1,0 +1,9 @@
+{
+  "sucursal": "Centro",
+  "movimientos": [
+    { "fecha": "2026-09-01", "sucursal": "Centro", "tipo": "ingreso", "concepto": "Ventas del día", "monto": 185000 },
+    { "fecha": "2026-09-01", "sucursal": "Centro", "tipo": "egreso", "concepto": "Pago a proveedor", "monto": 92000 },
+    { "fecha": "2026-09-02", "sucursal": "Centro", "tipo": "ingreso", "concepto": "Ventas del día", "monto": 210500 },
+    { "fecha": "2026-09-02", "sucursal": "Centro", "tipo": "egreso", "concepto": "Luz", "monto": 48000 }
+  ]
+}

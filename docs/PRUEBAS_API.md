@@ -216,3 +216,51 @@ curl -X POST http://localhost:3000/api/reports -H "Authorization: Bearer $TOKEN"
 - [x] Funciona sin IA (reporte básico) y con un proveedor simulado para demos.
 - [x] Rutas internas y referencias de IA nunca expuestas al cliente.
 - [x] Migración SQL de v1 a v2 sin pérdida de datos.
+
+
+---
+
+# Pruebas de la versión 2.2 (varias fuentes y PDF)
+
+Archivos de ejemplo en `backend/scripts/ejemplos/`: `ventas.json`, `ventas_limpio.json`, `movimientos_sucursal_centro.json`, `movimientos_sucursal_norte.csv` y `caja_sucursal_sur.xlsx`.
+
+```bash
+# Comparar (exactamente 2; la primera es la original)
+curl -X POST http://localhost:3000/api/reports/generar-multiple -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"data_source_ids":[ID_VENTAS, ID_VENTAS_LIMPIO],"modo":"comparacion"}'
+# → 3 con el mismo contenido (3 con otro formato), 3 con valores distintos (id 3, 4 y 6), 1 duplicado quitado
+
+# Consolidar / arqueo por sucursal
+curl -X POST http://localhost:3000/api/reports/generar-multiple -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"data_source_ids":[ID_CENTRO, ID_NORTE, ID_SUR],"modo":"consolidacion","consulta":"Hacé un arqueo de movimientos por sucursal"}'
+# → Centro saldo 255.500 · Sur 151.700 · Norte 65.800 · TOTAL ingresos 900.500, egresos 427.500, saldo 473.000
+
+# Pregunta libre sobre varias fuentes
+curl -X POST http://localhost:3000/api/reports/generar-multiple -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"data_source_ids":[ID_CENTRO, ID_NORTE, ID_SUR],"modo":"consulta","consulta":"¿Cuánto se pagó a proveedores en total?"}'
+# → 2 registros relacionados que suman $ 222.000
+
+# Errores esperados (400)
+#   modo comparacion con 3 fuentes  → "Para comparar elegí exactamente 2 fuentes"
+#   una sola fuente                 → "Elegí entre 2 y 10 fuentes"
+#   fuente inexistente              → "Alguna de las fuentes no existe"
+#   modo consulta sin pregunta      → "Escribí qué querés saber"
+
+# Guardar: se manda el borrador tal cual (incluye data_source_ids) + estado
+curl -X POST http://localhost:3000/api/reports -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d @borrador.json
+
+# PDF de cualquier reporte (nuevo o anterior)
+curl -o reporte.pdf http://localhost:3000/api/reports/ID/pdf -H "Authorization: Bearer $TOKEN"
+
+# 409 — no se puede borrar una fuente usada en un reporte de varias fuentes
+curl -X DELETE http://localhost:3000/api/data-sources/ID_NORTE -H "Authorization: Bearer $TOKEN"
+```
+
+## Checklist v2.2
+- [x] Carga de varios archivos a la vez, con progreso y error por archivo.
+- [x] Comparación de 2 fuentes: formato vs. valor, clave con duplicados, celdas vacías y totales.
+- [x] Consolidación de JSON + CSV + Excel con columnas equivalentes y arqueo por sucursal.
+- [x] Pregunta libre sobre varias fuentes, con la suma de los registros relacionados.
+- [x] La IA redacta con cálculos exactos; si falla, responde el motor local.
+- [x] PDF descargable de todos los reportes.
+- [x] Nada de lo anterior cambió: reportes de una fuente, carga simple e IA funcionan igual.

@@ -8,6 +8,7 @@ import EstadoIA from '../components/EstadoIA.jsx';
 import DataSourceModal from '../components/DataSourceModal.jsx';
 import FuenteDetalle from '../components/FuenteDetalle.jsx';
 import ReportModal from '../components/ReportModal.jsx';
+import MultiReportModal from '../components/MultiReportModal.jsx';
 import CategoriasPanel from '../components/CategoriasPanel.jsx';
 import { TIPOS_FUENTE, haceDias, puedeEditar, tamano, enProceso } from '../utils/formato.js';
 
@@ -25,6 +26,10 @@ export default function Fuentes() {
   const [modalFuente, setModalFuente] = useState({ abierto: false, fuente: null });
   const [modalReporte, setModalReporte] = useState({ abierto: false, fuente: '' });
   const [detalle, setDetalle] = useState(null);
+  // Selección para reportes de varias fuentes (el orden importa al comparar)
+  const [seleccion, setSeleccion] = useState([]);
+  const [modalMultiple, setModalMultiple] = useState({ abierto: false, ids: [] });
+  const alternarSeleccion = (id) => setSeleccion((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   const cargarCategorias = useCallback(() => categoriesApi.listar().then(setCategorias).catch((e) => notificar(e.message, 'error')), [notificar]);
 
@@ -97,7 +102,7 @@ export default function Fuentes() {
           <h1 className="titulo-pagina">Fuentes de datos</h1>
           <p className="text-secundario mb-0">Planillas, documentos, fotos, audios o videos: todo en un solo lugar.</p>
         </div>
-        {editable && <button type="button" className="btn btn-primario" onClick={() => setModalFuente({ abierto: true, fuente: null })}><i className="bi bi-plus-lg me-1" />Cargar fuente</button>}
+        {editable && <button type="button" className="btn btn-primario" onClick={() => setModalFuente({ abierto: true, fuente: null })}><i className="bi bi-plus-lg me-1" />Cargar fuentes</button>}
       </header>
 
       <div className="row g-4">
@@ -124,11 +129,34 @@ export default function Fuentes() {
               accion={!hayFiltros && editable && <button className="btn btn-primario" onClick={() => setModalFuente({ abierto: true, fuente: null })}>Cargar fuente</button>} />
           ) : (
             <div className="lista-fuentes">
+              {editable && (
+                <div className={`barra-seleccion ${seleccion.length ? 'activa' : ''}`} role="region" aria-label="Fuentes seleccionadas">
+                  {seleccion.length === 0 ? (
+                    <span className="small text-secundario"><i className="bi bi-check2-square me-1" />Marcá dos o más fuentes para compararlas, consolidarlas o preguntarles juntas.</span>
+                  ) : (
+                    <>
+                      <span className="small fw-bold">{seleccion.length} {seleccion.length === 1 ? 'fuente seleccionada' : 'fuentes seleccionadas'}</span>
+                      <span className="ms-auto d-flex gap-2 flex-wrap">
+                        <button type="button" className="btn btn-sm btn-secundario" disabled={seleccion.length !== 2}
+                          title={seleccion.length !== 2 ? 'Para comparar elegí exactamente 2' : ''}
+                          onClick={() => setModalMultiple({ abierto: true, ids: seleccion })}><i className="bi bi-arrow-left-right me-1" />Comparar</button>
+                        <button type="button" className="btn btn-sm btn-primario" disabled={seleccion.length < 2}
+                          onClick={() => setModalMultiple({ abierto: true, ids: seleccion })}><i className="bi bi-union me-1" />Consolidar o preguntar</button>
+                        <button type="button" className="btn btn-sm btn-link" onClick={() => setSeleccion([])}>Limpiar</button>
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
               {fuentes.map((f) => (
-                <article key={f.id} className="fila-fuente">
+                <article key={f.id} className={`fila-fuente ${seleccion.includes(f.id) ? 'seleccionada' : ''}`}>
                   <div className="fuente-icono" aria-hidden="true"><i className={`bi ${TIPOS_FUENTE[f.tipo_fuente]?.icono}`} /></div>
                   <div className="fuente-cuerpo">
                     <div className="d-flex flex-wrap align-items-center gap-2">
+                      {editable && ['listo', 'sin_ia'].includes(f.estado_ia) && (
+                        <input type="checkbox" className="form-check-input m-0" checked={seleccion.includes(f.id)}
+                          onChange={() => alternarSeleccion(f.id)} aria-label={`Seleccionar ${f.titulo}`} />
+                      )}
                       <button type="button" className="fuente-titulo" onClick={() => setDetalle(f.id)}>{f.titulo}</button>
                       <EstadoIA fuente={f} />
                     </div>
@@ -181,6 +209,10 @@ export default function Fuentes() {
       <DataSourceModal show={modalFuente.abierto} fuente={modalFuente.fuente} categorias={categorias}
         onClose={() => setModalFuente({ abierto: false, fuente: null })}
         onSaved={() => { setModalFuente({ abierto: false, fuente: null }); cargar(); }} />
+
+      <MultiReportModal show={modalMultiple.abierto} fuentesIniciales={modalMultiple.ids}
+        onClose={() => setModalMultiple({ abierto: false, ids: [] })}
+        onSaved={() => { setModalMultiple({ abierto: false, ids: [] }); setSeleccion([]); cargar(); }} />
 
       <FuenteDetalle id={detalle} onClose={cerrarDetalle} onPreguntar={editable ? preguntar : null} />
 

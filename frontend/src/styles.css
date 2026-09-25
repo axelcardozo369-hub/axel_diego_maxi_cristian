@@ -283,3 +283,37 @@ mark, .resaltado {
 .problemas div:first-child { border-top: none; padding-top: 0; }
 .problemas dt { font-weight: 700; }
 .problemas dd { margin: 0.2rem 0 0; color: var(--suave); font-size: 0.93rem; }
+
+/* ============================================================
+   v2.2 — varias fuentes, comparaciones, consolidación y PDF
+   ============================================================ */
+.zona-archivo.compacta { padding: 0.9rem 1rem; }
+.lista-archivos { list-style: none; padding: 0; margin: 0.75rem 0 0; display: flex; flex-direction: column; gap: 0.5rem; max-height: 320px; overflow: auto; }
+.lista-archivos li { display: flex; gap: 0.75rem; align-items: flex-start; border: 1px solid var(--linea); border-radius: 0.6rem; padding: 0.6rem 0.7rem; background: #fff; }
+.lista-archivos li > .bi { font-size: 1.3rem; color: var(--primario); margin-top: 0.2rem; }
+.lista-archivos li.archivo-error { border-color: #f1b8b1; background: #fff7f6; }
+.lista-archivos li.archivo-listo { opacity: 0.75; }
+
+.barra-seleccion { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; padding: 0.6rem 0.9rem; border: 1px dashed #c6cddc; border-radius: 0.75rem; background: #f7f8fb; }
+.barra-seleccion.activa { border-style: solid; border-color: var(--primario); background: #eef0fa; position: sticky; top: 0.5rem; z-index: 5; }
+.fila-fuente.seleccionada { border-color: var(--primario); box-shadow: 0 0 0 2px rgba(51, 70, 168, 0.15); }
+
+.modos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; }
+.modo { text-align: left; border: 1px solid var(--linea); background: #fff; border-radius: 0.7rem; padding: 0.8rem 0.9rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.modo:hover { border-color: var(--primario); }
+.modo.activo { border-color: var(--primario); background: #eef0fa; box-shadow: 0 0 0 2px rgba(51, 70, 168, 0.2); }
+.modo > .bi { font-size: 1.3rem; color: var(--primario); }
+.modo-titulo { font-weight: 800; }
+.modo-texto { font-size: 0.82rem; color: var(--suave); line-height: 1.35; }
+
+.selector-fuentes { border: 1px solid var(--linea); border-radius: 0.7rem; max-height: 260px; overflow: auto; background: #fff; }
+.selector-fuentes.con-error { border-color: var(--peligro); }
+.opcion-fuente { display: flex; gap: 0.7rem; align-items: center; padding: 0.55rem 0.8rem; border-top: 1px solid var(--linea); cursor: pointer; margin: 0; }
+.opcion-fuente:first-child { border-top: none; }
+.opcion-fuente:hover { background: #f7f8fb; }
+.opcion-fuente.elegida { background: #eef0fa; }
+.opcion-fuente > .bi { color: var(--primario); font-size: 1.15rem; }
+.orden { width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--primario); color: #fff; font-weight: 700; font-size: 0.8rem; display: grid; place-items: center; }
+
+.tabla-reporte { max-height: 420px; overflow: auto; }
+.tabla-metricas .fila-total td { background: #fbfcdf; font-weight: 700; }
